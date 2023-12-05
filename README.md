@@ -6,6 +6,7 @@ This Waze Map Editor script has the ability to:
 - show permanently closed places using the google maps places api
 
 ## Options
+- `Nearby Search radius` defines the radius used to address the imprecision of coordinates when transitioning between Waze and Google Maps. For cities, a lower value may be suitable
 - `show residential places` is to show residential addresses (sometimes houses are referenced on waze)
 - `show areas` is to show the pink areas details in the table view (contain multiple points)
 - `show closed places` is to highlight in red every permanently closed place in the table

@@ -84,7 +84,6 @@
     function InitializeScriptTab()
     {
         api = window.prompt("Enter your google maps api key (optional)");
-        //api = "AIzaSyD321egEGFt0CcVqKptmijvSK2w_M-cDAY"
 
         const { tabLabel, tabPane } = W.userscripts.registerSidebarTab("PermanentlyClosed");
         tabLabel.innerHTML = "PermanentlyClosed";

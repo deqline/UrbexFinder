@@ -34,6 +34,6 @@ To use this script, you must:
 4. If tampermonkey loaded the script, you should see a message box asking you for your [google places api key](https://developers.google.com/maps/documentation/javascript/get-api-key).
 5. Head to the sidebar on the left and go to the scripts page 
 
-## Todo
+## Future Features
 - add support for Bounding boxes (collection of points, pink areas) in the show closed feature
-  - add option to get center coord of polygon area -
+  - add option to get center coord of polygon area

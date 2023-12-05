@@ -5,7 +5,9 @@ This Waze Map Editor script has the ability to:
 - filter places by categories
 - show permanently closed places using the google maps places api
 
-## Options
+## Features
+To properly use this script, make sure to zoom enough to see marker points appear on the map and make sure that `Places > Public` is enabled in the waze map layers.
+
 - `Nearby Search radius` defines the radius used to address the imprecision of coordinates when transitioning between Waze and Google Maps. For cities, a lower value may be suitable
 - `show residential places` is to show residential addresses (sometimes houses are referenced on waze)
 - `show areas` is to show the pink areas details in the table view (contain multiple points)
@@ -14,7 +16,10 @@ This Waze Map Editor script has the ability to:
   - red: indicates confirmed business closure
   - orange: indicates data mismatch between waze and google maps (see console)
 - `Filter By Category` is to filter table entries by a certain category
-  - Note: filtering before showing closed places only sends google place requests for the elements displayed on the table  
+  - Note: filtering before showing closed places only sends google place requests for the elements displayed on the table
+ 
+- Also clicking on an entry name in the table will highlight the corresponding marker on the map (can be nonvisible because out of view)
+- When moving on the map, make sure to re-enable the script as new points are added  
 
 ## Installation
 To use this script, you must:

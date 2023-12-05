@@ -9,7 +9,9 @@ This Waze Map Editor script has the ability to:
 - `show residential places` is to show residential addresses (sometimes houses are referenced on waze)
 - `show areas` is to show the pink areas details in the table view (contain multiple points)
 - `show closed places` is to highlight in red every permanently closed place in the table
-- `show overlays on map` is to add a red/orange overlay on the marker elements on the map view (experimental)
+- `show overlays on map` is to add an overlay on the marker elements on the map view (experimental)
+  - red: indicates confirmed business closure
+  - orange: indicates data mismatch between waze and google maps (see console)
 - `Filter By Category` is to filter table entries by a certain category
   - Note: filtering before showing closed places only sends google place requests for the elements displayed on the table  
 

@@ -9,8 +9,8 @@ This Waze Map Editor script has the ability to:
 To properly use this script, make sure to zoom enough to see marker points appear on the map and make sure that `Places > Public` is enabled in the waze map layers.
 
 - `Nearby Search radius` defines the radius used to address the imprecision of coordinates when transitioning between Waze and Google Maps. For cities, a lower value may be suitable
-- `show residential places` is to show residential addresses (sometimes houses are referenced on waze)
-- `show areas` is to show the pink areas details in the table view (contain multiple points)
+- `show residential places` is to show residential addresses (i.e houses)
+- `show areas` is to show the pink areas details in the table view (contain multiple coordinates)
 - `show closed places` is to highlight in red every permanently closed place in the table
 - `show overlays on map` is to add an overlay on the marker elements on the map view (experimental)
   - red: indicates confirmed business closure

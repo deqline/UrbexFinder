@@ -18,7 +18,8 @@ To properly use this script, make sure to zoom enough to see marker points appea
 - `Filter By Category` is to filter table entries by a certain category
   - Note: filtering before showing closed places only sends google place requests for the elements displayed on the table
  
-- Clicking on an entry name in the table will highlight the corresponding marker on the map (can be nonvisible because out of view) 
+- Clicking on an entry name in the table will highlight the corresponding marker or area on the map (can be nonvisible because out of view)
+  - clicking on the highlighted marker or area will restore it's highlighting
 
 ## Important
 - When enabling the `show overlays on map` feature

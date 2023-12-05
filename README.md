@@ -18,7 +18,12 @@ To properly use this script, make sure to zoom enough to see marker points appea
 - `Filter By Category` is to filter table entries by a certain category
   - Note: filtering before showing closed places only sends google place requests for the elements displayed on the table
  
-- Also clicking on an entry name in the table will highlight the corresponding marker on the map (can be nonvisible because out of view)
+- Clicking on an entry name in the table will highlight the corresponding marker on the map (can be nonvisible because out of view) 
+
+## Important
+ - When enabling the `show overlays on map` feature
+  - Avoid zooming because this will displace the circle overlays and misalign them with the actual markers
+  - If the overlays are over the marker point and you can't select the markers, try toggling the sidebar
 - When moving on the map, make sure to re-enable the script as new points are added  
 
 ## Installation
@@ -29,11 +34,6 @@ To use this script, you must:
 4. If tampermonkey loaded the script, you should see a message box asking you for your [google places api key](https://developers.google.com/maps/documentation/javascript/get-api-key).
 5. Head to the sidebar on the left and go to the scripts page 
 
-## Issues
-- Bounding boxes (collection of points, pink areas) isn't supported yet in the show closed feature
-- When enabling the `show overlays on map` feature
-  - Avoid zooming because this may displace the circle overlays and misalign them
-  - If the overlays are over the marker point and you can't select the markers, try toggling the sidebar 
-
 ## Todo
-- add option to get center coord of polygon area
+- add support for Bounding boxes (collection of points, pink areas) in the show closed feature
+  - add option to get center coord of polygon area -

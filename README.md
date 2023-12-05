@@ -22,8 +22,8 @@ To properly use this script, make sure to zoom enough to see marker points appea
 
 ## Important
 - When enabling the `show overlays on map` feature
-  - Avoid zooming because this will displace the circle overlays and misalign them with the actual markers
-  - If the overlays are over the marker point and you can't select the markers, try toggling the sidebar
+    - Avoid zooming because this will displace the circle overlays and misalign them with the actual markers
+    - If the overlays are over the marker point and you can't select the markers, try toggling the sidebar
 - When moving on the map, make sure to re-enable the script as new points are added  
 
 ## Installation

@@ -12,9 +12,9 @@ To properly use this script, make sure to zoom enough to see marker points appea
 - `show residential places` is to show residential addresses (i.e houses)
 - `show areas` is to show the pink areas details in the table view (contain multiple coordinates)
 - `show closed places` is to highlight in red every permanently closed place in the table
-- `show overlays on map` is to add an overlay on the marker elements on the map view (experimental)
+- `show overlays on map` is to add an overlay on the marker elements on the map view
   - red: indicates confirmed business closure
-  - orange: indicates data mismatch between waze and google maps (see console)
+  - orange: indicates data mismatch between waze and google maps (see developer console)
 - `Filter By Category` is to filter table entries by a certain category
   - Note: filtering before showing closed places only sends google place requests for the elements displayed on the table
  

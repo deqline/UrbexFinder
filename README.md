@@ -36,5 +36,5 @@ To use this script, you must:
 5. Head to the sidebar on the left and go to the scripts page 
 
 ## Future Features
-- add support for Bounding boxes (collection of points, pink areas) in the show closed feature
+- Add support for areas (collection of points, pink areas) -> sort, show closed not working
   - add option to get center coord of polygon area

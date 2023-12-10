@@ -1,14 +1,17 @@
 // ==UserScript==
 // @name         WME-PermanentlyClosed
 // @namespace    http://tampermonkey.net/
-// @version      Alpha-v3
+// @version      Alpha-v9
 // @description  A Waze Map Editor Script to find permanently closed places
 // @author       deqline
 // @source       https://github.com/deqline/WME-PermanentlyClosed 
-// @match        https://www.waze.com/en-US/editor
-// @icon           https://www.google.com/s2/favicons?sz=64&domain=waze.com
+// @match        https://www.waze.com/*/editor
+// @match        https://www.waze.com/editor
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=waze.com
 // @license      MIT
 // @grant        none
+// @downloadURL https://update.greasyfork.org/scripts/481447/WME-PermanentlyClosed.user.js
+// @updateURL https://update.greasyfork.org/scripts/481447/WME-PermanentlyClosed.meta.js
 // ==/UserScript==
 
 (function() {
@@ -23,7 +26,8 @@
         'category': "",
         'radius': 50,
         'closed': false,
-        'overlays': false
+        'overlays': false,
+        'debug': false
     };
     let categories = new Set();
     const debug = false;
@@ -48,24 +52,25 @@
         options.radius      = document.getElementById("radius_number").value;
         options.closed      = document.getElementById("closed_enable").checked;
         options.overlays   = document.getElementById("overlays_enable").checked;
+        options.debug       = document.getElementById("debug_check").checked;
     }
 
     function refreshUI() {
         for (let p in scannedPlaces) {
-            if(place.circleOverlay){
-                document.getElementById(place.parentFeatureID).removeChild(place.circleOverlay);
+            if(p.circleOverlay){
+                document.getElementById(p.parentFeatureID).removeChild(p.circleOverlay);
             }
 
         }
 
         scannedPlaces.length = 0;
         options = {
-        'enabled': false,
-        'bbox': false,
-        'residential': false,
-        'category': "",
-        'radius': 50,
-        'closed': false
+            'enabled': false,
+            'bbox': false,
+            'residential': false,
+            'category': "",
+            'radius': 50,
+            'closed': false
         };
         categories = new Set();
         refreshOptions();
@@ -78,6 +83,7 @@
         document.getElementById("radius_number").value = 50;
         document.getElementById("closed_enable").checked = false;
         document.getElementById("overlays_enable").checked = false;
+        document.getElementById("progress").innerText = " (Progress 0%)";
 
     }
 
@@ -106,7 +112,7 @@
         }
   </style>
          <div id="map" style="display:none;"></div>
-         <label for="enable" >Enabled</label>
+         <label for="enable" >Enable</label>
          <input name="enable" type="checkbox" id="enable"><br>
 
          <label for="radius">Nearby Search radius (in m)</label>
@@ -119,10 +125,13 @@
          <input name="show_bounding_box" type="checkbox" id="bbox_enable"><br>
 
          <label for="closed"> Show closed places</label>
-         <input name="closed" type="checkbox" id="closed_enable"/><br>
+         <input name="closed" type="checkbox" id="closed_enable"/><small id="progress"> (Progress 0%)</small><br>
 
          <label for="closed_overlays"> Show overlays on map </label>
          <input name="closed_overlays" type="checkbox" id="overlays_enable"/><br>
+
+         <label for="debug"> Show console debug </label>
+         <input name="debug" type="checkbox" id="debug_check"/><br>
 
          <label for="category_choice">Filter by category</label>
          <select name="category_choice" id="category_filter"></select><br>
@@ -156,9 +165,13 @@
 
 
             if(options.enabled) {
+                W.map.registerPriorityMapEvent("moveend", getRenderedMarkers, W.issueTrackerController);
+                W.map.registerPriorityMapEvent("zoomend", getRenderedMarkers, W.issueTrackerController);
                 getRenderedMarkers();
             } else {
                 refreshUI();
+                W.map.unregisterMapEvent("moveend", getRenderedMarkers, W.issueTrackerController);
+                W.map.unregisterMapEvent("zoomend", getRenderedMarkers, W.issueTrackerController);
                 return;
             }
         });
@@ -177,6 +190,7 @@
             }
 
         });
+
     }
 
     function handleRowClick(event)
@@ -186,7 +200,13 @@
             {
                 if(p.name == event.target.textContent) {
                     if(debug) console.log("click!", event.target.textContent, p.featureID);
-                    document.getElementById(p.featureID).setAttribute("stroke", "yellow");
+                    if(p.isBbox) {
+                        document.getElementById(p.featureID).setAttribute("stroke", "yellow");
+                    } else {
+                        document.getElementById(p.featureID).setAttribute("r", "10");
+                    }
+
+
                     return;
                 }
             }
@@ -195,13 +215,16 @@
 
     function updatePlaceCount()
     {
-        let i = 0;
+        let i = 0, j = 0;
         for(let p of scannedPlaces) {
             if(p.display) {
                 i++;
             }
+            if(p.closed) {
+                j++;
+            }
         }
-        document.getElementById("place_count").innerHTML = `${scannedPlaces.length} total, ${i} shown`;
+        document.getElementById("place_count").innerHTML = `${scannedPlaces.length} total, ${i} shown, ${j} closed`;
     }
 
     //implemented for belgium since sometimes places are in dutch in waze
@@ -258,9 +281,12 @@
         let map = new google.maps.Map(document.getElementById('map'), {center: mapCenter});
         var service = new google.maps.places.PlacesService(map);
 
+        let progress = 0;
+
         for (let p of scannedPlaces)
         {
-            if(!p.bbox && p.display) {
+            if(p.display) {
+                progress++;
 
                 let circleElem = document.getElementById(p.featureID);
                 if(!circleElem) continue;
@@ -278,7 +304,6 @@
                 let newID = "_" + circleElem.getAttribute("id");
                 newCircle.setAttribute("id", newID);
 
-
                 let match = false;
 
                 let request = {
@@ -290,10 +315,10 @@
 
                         if(debug) console.log(results);
                         for (var i = 0; i < results.length; i++) {
-                            console.log(`[google_places_api] Fetched results for findPlace query '${p.name + p.fullAddress}' === ${results[i].name} ( ${results[i].formatted_address} )`);
+                            if(options.debug) console.log(`[google_places_api] Fetched results for findPlace query '${p.name + p.fullAddress}' === ${results[i].name} ( ${results[i].formatted_address} )`);
                             if(checkSimilarity(results[i], p)) {
                                 match = true;
-                                console.log("Found similarity");
+                                if(options.debug) console.log("Found similarity");
 
                                 if(results[i].business_status == "CLOSED_PERMANENTLY") { //can also check for "CLOSED_TEMPORARILY" if really needed
                                     p.closed = true;
@@ -321,10 +346,10 @@
 
                                 if(debug) console.log(results);
                                 for (var i = 0; i < results.length; i++) {
-                                    console.log(`[google_places_api] Second try: Fetched results for nearby search query '${p.coords.join(",")}' => matched ${results[i].name}`);
+                                    if(options.debug) console.log(`[google_places_api] Second try: Fetched results for nearby search query '${p.coords.join(",")}' => matched ${results[i].name}`);
                                     if(checkSimilarity(results[i], p)) {
                                         match = true;
-                                        console.log("Found similarity");
+                                        if(options.debug) console.log("Found similarity");
 
                                         if("business_status" in results[i] && results[i].business_status == "CLOSED_PERMANENTLY") {
                                             p.closed = true;
@@ -359,8 +384,41 @@
                 });
 
             }
-
+            document.getElementById("progress").innerText = ` (Progress ${(progress/scannedPlaces.length)*100}%)`;
         }
+        document.getElementById("progress").innerText = ` (Progress 100%)`;
+
+        //add closed filter
+        if(!categories.has("CLOSED")) {
+
+            let optionClosed = document.createElement("option");
+            optionClosed.style.color = "red";
+            optionClosed.innerText = "CLOSED";
+            optionClosed.value = "CLOSED";
+            document.getElementById("category_filter").appendChild(optionClosed);
+
+            categories.add("CLOSED");
+        }
+        updatePlaceCount(); //update closed place count
+    }
+
+    function calculatePolygonCenter(coordinates) {
+        if (coordinates.length === 0) {
+            return null;
+        }
+
+        let sumLat = 0;
+        let sumLon = 0;
+
+        for (const coordinate of coordinates) {
+            sumLon += coordinate[0];
+            sumLat += coordinate[1];
+        }
+
+        const avgLat = sumLat / coordinates.length;
+        const avgLon = sumLon / coordinates.length;
+
+        return [avgLat, avgLon];
     }
 
     function displayPlaces()
@@ -370,11 +428,16 @@
         for(let place of scannedPlaces) {
             if (place.node == null) {
                 let cell = document.createElement("tr");
+
+                if(place.coords[0].length > 1) {
+                    let center = calculatePolygonCenter(place.coords[0]);
+                    place.coords = center;
+                }
                 let coordsString = place.coords.join(",");
 
                 cell.innerHTML = `
                 <td>${place.name}</td>
-                <td>${coordsString.length < 40 ? coordsString : coordsString.substring(0, 40) + '...'}</td>
+                <td>${coordsString}</td>
                 <td>${place.categories.join(",")}</td>
                 `;
                 place.node = cell;
@@ -444,6 +507,11 @@
             if(p.node) {
                 p.node.style.display = "";
             }
+            if(p.featureID.length > 0) {
+                if(document.getElementById(p.featureID)) {
+                    document.getElementById(p.featureID).style.display = "";
+                }
+            }
         }
     }
 
@@ -453,15 +521,27 @@
         if(options.category == "") return;
 
         for(let p of scannedPlaces) {
+            if(options.category == "CLOSED") {
+                if(!p.closed) {
+                    p.display = false;
+                    p.node.style.display = "none";
+                    document.getElementById(p.featureID).style.display = "none";
+                }
+                continue;
+            }
+
             if(!p.categories.includes(options.category)) {
                 p.display = false;
                 p.node.style.display = "none";
+                document.getElementById(p.featureID).style.display = "none";
             }
         }
     }
 
     function getRenderedMarkers()
     {
+        console.log("Rendering");
+
         let renderedLayers = W.map.nodeLayer.renderer.map.layers;
         let renderedPlaceMarkers = null;
         let parentFeatureID = null;
@@ -473,6 +553,7 @@
 
 
                 if(layerElement.name  == "venues") {
+                    console.log(layerElement);
                     parentFeatureID = layerElement.renderer.vectorRoot.id;
                     renderedPlaceMarkers = layerElement.features;
                 }

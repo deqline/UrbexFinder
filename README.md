@@ -35,7 +35,5 @@ To use this script, you must:
 5. Head to the sidebar on the left and go to the scripts page 
 
 ## Future Features
-- Add support for areas (collection of points, pink areas)
-  - update sort for areas
-  - show closed areas by only using `findPlaceFromQuery`
-- Ddd option to get center coord of area
+
+- Keep feature some feature points on map even after de-zoom

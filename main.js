@@ -4,7 +4,7 @@
 // @version      Alpha-v9
 // @description  A Waze Map Editor Script to find permanently closed places
 // @author       deqline
-// @source       https://github.com/deqline/WME-PermanentlyClosed 
+// @source       https://github.com/deqline/WME-PermanentlyClosed
 // @match        https://www.waze.com/*/editor
 // @match        https://www.waze.com/editor
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=waze.com
@@ -31,6 +31,9 @@
     };
     let categories = new Set();
     const debug = false;
+    let featureIDS = [];
+    let parentLayerElement = null
+    let emptyOption = null;
 
     //Waze object
     if (W?.userscripts?.state.isReady) { //optional chaining operator ?.
@@ -64,6 +67,10 @@
         }
 
         scannedPlaces.length = 0;
+        featureIDS.length = 0;
+        parentLayerElement = null;
+        let emptyOption = null;
+
         options = {
             'enabled': false,
             'bbox': false,
@@ -165,13 +172,13 @@
 
 
             if(options.enabled) {
-                W.map.registerPriorityMapEvent("moveend", getRenderedMarkers, W.issueTrackerController);
-                W.map.registerPriorityMapEvent("zoomend", getRenderedMarkers, W.issueTrackerController);
+                W.map.registerPriorityMapEvent("moveend", MoveZoomHandler, W.issueTrackerController);
+                W.map.registerPriorityMapEvent("zoomend", MoveZoomHandler, W.issueTrackerController);
                 getRenderedMarkers();
             } else {
                 refreshUI();
-                W.map.unregisterMapEvent("moveend", getRenderedMarkers, W.issueTrackerController);
-                W.map.unregisterMapEvent("zoomend", getRenderedMarkers, W.issueTrackerController);
+                W.map.unregisterMapEvent("moveend", MoveZoomHandler, W.issueTrackerController);
+                W.map.unregisterMapEvent("zoomend", MoveZoomHandler, W.issueTrackerController);
                 return;
             }
         });
@@ -184,7 +191,7 @@
             filterByCategory();
             displayPlaces();
 
-            if(e.target.id != "overlays_enable" && options.closed)
+            if(e.target.id == "closed_enable" && options.closed)
             {
                 showClosed();
             }
@@ -461,24 +468,28 @@
 
         }
 
-        if(placesTable.children.length == 0) {
-            for(let e of scannedPlaces) {
-                e.node.style.display = (e.display ? "" : "none");
-                placesTable.appendChild(e.node);
+        for(let e of scannedPlaces) {
+            if(e.added == false) {
+               e.node.style.display = (e.display ? "" : "none");
+               placesTable.appendChild(e.node);
+               e.added = true;
             }
+
         }
         updatePlaceCount();
     }
 
     function updateCategories()
     {
-        //no filter option
-        let emptyOption = document.createElement("option");
-        // Set HTML content for the option
-        emptyOption.innerHTML = '----';
-        // Set a value for the option (optional)
-        emptyOption.value = "";
-        document.getElementById("category_filter").appendChild(emptyOption);
+        if(!emptyOption){
+            //no filter option
+            emptyOption = document.createElement("option");
+            // Set HTML content for the option
+            emptyOption.innerHTML = '----';
+            // Set a value for the option (optional)
+            emptyOption.value = "";
+            document.getElementById("category_filter").appendChild(emptyOption);
+        }
 
         for(let place of scannedPlaces) {
             for(let c of place.categories) {
@@ -508,9 +519,11 @@
                 p.node.style.display = "";
             }
             if(p.featureID.length > 0) {
-                if(document.getElementById(p.featureID)) {
-                    document.getElementById(p.featureID).style.display = "";
+                if(document.getElementById(p.featureID) == null) {
+                    deletePlace(p.featureID);
+                    continue;
                 }
+                document.getElementById(p.featureID).style.display = "";
             }
         }
     }
@@ -538,28 +551,77 @@
         }
     }
 
+    function MoveZoomHandler() {
+        //remove out of view features
+
+        for(let id of featureIDS){
+            if(document.getElementById(id) === null) {
+                deletePlace(id);
+            }
+        }
+
+
+        getRenderedMarkers();
+    }
+
+    function deletePlace(featureID)
+    {
+        let place = null;
+        for(let p of scannedPlaces) {
+
+            if(p.featureID == featureID) {
+                place = p;
+            }
+        }
+        if(place != null)
+        {
+            if(place.node != null){
+                let parent = document.getElementById("scanned-places");
+                if(parent.contains(place.node)){
+                   parent.removeChild(place.node);
+                   scannedPlaces = scannedPlaces.filter((p) => {return p.featureID != featureID;});
+                   //console.log("Removing", place.name, " ", scannedPlaces);
+                 }
+
+            }
+
+            for(let c of place.categories) {
+                categories.delete(c);
+            }
+            //get removed categories
+            let existingCategories = document.getElementById("category_filter");
+
+            for(let c of existingCategories.children) {
+                if(categories.has(c.innerText)){
+                    c.remove();
+                }
+            }
+        }
+        updatePlaceCount();
+
+    }
+
     function getRenderedMarkers()
     {
         console.log("Rendering");
 
         let renderedLayers = W.map.nodeLayer.renderer.map.layers;
-        let renderedPlaceMarkers = null;
-        let parentFeatureID = null;
 
-        if(renderedLayers) {
+        if(!parentLayerElement && renderedLayers) {
             for(let layerElement of renderedLayers) {
 
                 if(debug) console.log(layerElement.name, " : ", layerElement);
 
 
                 if(layerElement.name  == "venues") {
-                    console.log(layerElement);
-                    parentFeatureID = layerElement.renderer.vectorRoot.id;
-                    renderedPlaceMarkers = layerElement.features;
+                    parentLayerElement = layerElement;
                 }
             }
         }
 
+
+        let parentFeatureID      = parentLayerElement.renderer.vectorRoot.id;
+        let renderedPlaceMarkers = parentLayerElement.features;
 
         if(debug) console.log("rendered place markers : ", renderedPlaceMarkers);
 
@@ -569,7 +631,13 @@
 
             //if we successfully got the id of the circle marker on the map
             if(featureElement) {
+                if(featureIDS.includes(featureElement.id)) {
+                    continue;
+                }
+
                 let point = document.getElementById(featureElement.id);
+
+                featureIDS.push(featureElement.id);
 
                 let markerDetails = markerFeatureObject.attributes;
                 if(debug) console.log(markerFeatureObject);
@@ -591,6 +659,7 @@
 
                 }
 
+                // console.log(`Adding ${markerDetails.name}`);
                 let placeDetails = {
                     'name': markerDetails.residential ? "maison n°" +
                     markerDetails.houseNumber : (markerDetails.name.length > 0 ? markerDetails.name : "/"),
@@ -609,7 +678,8 @@
                     'circleOverlay': null,
                     'isBbox': markerDetails.geoJSONGeometry.type == "Polygon",//bounding boxes (polygon of multiple points)
                     'display': true,
-                    'closed': false
+                    'closed': false,
+                    'added': false //added to table
                 };
 
                 scannedPlaces.push(placeDetails);

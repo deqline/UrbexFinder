@@ -5,7 +5,7 @@ This Waze Map Editor script has the ability to:
 - filter places by categories
 - show permanently closed places using the google maps places api
 
-Please cbeck out the greasyfork link to see the latest code instead of this repository.
+Please check out the greasyfork link to see the latest code instead of this repository.
 
 ## Features
 To properly use this script, make sure to zoom enough to see marker points appear on the map and make sure that `Places > Public` is enabled in the waze map layers.

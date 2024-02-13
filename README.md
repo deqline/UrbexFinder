@@ -1,5 +1,5 @@
 # UrbexFinder
-![GitHub Sponsor](https://img.shields.io/github/sponsors/deqline?label=Donate&logo=GitHub)
+[![](https://img.shields.io/static/v1?label=Donate&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86)](https://github.com/sponsors/deqline)
 
 This repository contains a javascript plugin for the [Waze Map Editor](https://www.waze.com/en-US/editor) that allows to find permanently closed places in a given area.
 

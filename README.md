@@ -1,6 +1,7 @@
 # UrbexFinder
 
 This repository contains a javascript plugin for the [Waze Map Editor](https://www.waze.com/en-US/editor) that allows to find permanently closed places in a given area.
+
 It also allows to:
 - list every place in the current map editor view
 - filter places by categories

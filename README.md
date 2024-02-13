@@ -3,7 +3,7 @@
 
 This repository contains a javascript plugin for the [Waze Map Editor](https://www.waze.com/en-US/editor) that allows to find permanently closed places in a given area.
 
-It lists every place in the current map editor view and allows for filtering of places by category.
+This plugin also lists every place in the current map editor view and allows for filtering of places by category.
 
 ✅Please check out the greasyfork link to see the latest code instead of this repository.
 
